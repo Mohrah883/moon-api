@@ -10,7 +10,12 @@ $d = $data["description"];
 $s = $data["status"];
 $u = date("Y-m-d H:i:s");
 
-$sql = "update posts set title='$t', description='$d', status='$s', updated_at='$u' where id=$id";
+if (!$id || !$t || !$d || !$s) {
+    echo "missing data";
+    exit;
+}
+
+$sql = "UPDATE posts SET title='$t', description='$d', status='$s', updated_at='$u' WHERE id=$id";
 
 mysqli_query($conn, $sql);
 
