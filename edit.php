@@ -1,22 +1,27 @@
 <?php
-
 include "db.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-$id = $data["id"];
-$t = $data["title"];
-$d = $data["description"];
-$s = $data["status"];
-$u = date("Y-m-d H:i:s");
+$id = $data["id"] ?? '';
+$title = $data["title"] ?? '';
+$description = $data["description"] ?? '';
+$status = $data["status"] ?? '';
 
-if (!$id || !$t || !$d || !$s) {
-    echo "missing data";
-    exit;
+if (!$id || !$title || !$description || !$status) {
+  echo "missing fields";
+  exit;
 }
 
-$sql = "UPDATE posts SET title='$t', description='$d', status='$s', updated_at='$u' WHERE id=$id";
+$stmt = $conn->prepare("UPDATE posts SET title=?, description=?, status=?, updated_at=NOW() WHERE id=?");
+$stmt->bind_param("sssi", $title, $description, $status, $id);
+$stmt->execute();
 
-mysqli_query($conn, $sql);
+if ($stmt->affected_rows > 0) {
+  echo "updated";
+} else {
+  echo "not updated";
+}
 
-echo "done";
+$stmt->close();
+$conn->close();

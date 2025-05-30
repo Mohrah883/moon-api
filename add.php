@@ -1,19 +1,33 @@
 <?php
-
+session_start();
 include "db.php";
 
-$t = "mimi, first post";
-$d = "Lets gooo to the moon";
-$s = "draft";
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-$c = date("Y-m-d H:i:s");
-$u = date("Y-m-d H:i:s");
+  if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] != $_SESSION['csrf_token']) {
+    echo "csrf error";
+    exit;
+  }
 
-$sql = "INSERT INTO posts (title, description, status, created_at, updated_at)
-VALUES ('$t', '$d', '$s', '$c', '$u')";
+  $title = $_POST['title'] ?? '';
+  $description = $_POST['description'] ?? '';
+  $status = $_POST['status'] ?? '';
 
-mysqli_query($conn, $sql);
+  if ($title == '' || $description == '' || $status == '') {
+    echo "please fill all fields";
+    exit;
+  }
 
-echo "done";
+  $stmt = $conn->prepare("INSERT INTO posts (title, description, status, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())");
+  $stmt->bind_param("sss", $title, $description, $status);
+  $stmt->execute();
 
-mysqli_close($conn);
+  if ($stmt->affected_rows > 0) {
+    echo "post added";
+  } else {
+    echo "error happened";
+  }
+
+  $stmt->close();
+  $conn->close();
+}

@@ -1,14 +1,19 @@
 <?php
-
 include "db.php";
 
-$sql = "SELECT * FROM posts";
-$result = mysqli_query($conn, $sql);
+$q = $conn->query("SELECT id, title, description, status, created_at, updated_at FROM posts");
 
-$data = [];
-
-while ($row = mysqli_fetch_assoc($result)) {
-    $data[] = $row;
+if (!$q) {
+  echo "SQL Error: " . $conn->error;
+  exit;
 }
 
-echo json_encode($data);
+$rows = [];
+
+while ($r = $q->fetch_assoc()) {
+  $rows[] = $r;
+}
+
+echo json_encode($rows);
+
+$conn->close();

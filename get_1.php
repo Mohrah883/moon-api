@@ -1,24 +1,26 @@
 <?php
 include "db.php";
 
-if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
-  echo "Missing or invalid ID";
+$id = $_GET["id"] ?? '';
+
+if (!$id || !is_numeric($id)) {
+  echo "id missing";
   exit;
 }
 
-$id = intval($_GET['id']);
+$stmt = $conn->prepare("SELECT * FROM posts WHERE id=?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$res = $stmt->get_result();
+$row = $res->fetch_assoc();
 
-$result = mysqli_query($conn, "SELECT * FROM posts WHERE id = $id");
-
-if ($row = mysqli_fetch_assoc($result)) {
-  echo "Title: " . htmlspecialchars($row['title']) . "<br>";
-  echo "Description: " . htmlspecialchars($row['description']) . "<br>";
-  echo "Status: " . htmlspecialchars($row['status']) . "<br>";
-  echo "Created at: " . $row['created_at'] . "<br>";
-  echo "Updated at: " . $row['updated_at'] . "<br>";
+if ($row) {
+  echo "Title: " . $row["title"] . "<br>";
+  echo "Description: " . $row["description"] . "<br>";
+  echo "Status: " . $row["status"] . "<br>";
 } else {
-  echo "Post not found";
+  echo "not found";
 }
 
-mysqli_close($conn);
-?>
+$stmt->close();
+$conn->close();
