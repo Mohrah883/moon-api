@@ -1,19 +1,30 @@
 <?php
 include "db.php";
 
-$data = json_decode(file_get_contents("php://input"), true);
-$id = $data["id"] ?? '';
+$id = $_GET["id"] ?? '';
 
-if (!$id) {
+if (!$id || !is_numeric($id)) {
   echo "id missing";
   exit;
 }
 
-$q = $conn->prepare("DELETE FROM posts WHERE id=?");
-$q->bind_param("i", $id);
-$q->execute();
+$thumb = null;
+$get = $conn->prepare("SELECT thumbnail FROM posts WHERE id=?");
+$get->bind_param("i", $id);
+$get->execute();
+$get->bind_result($thumb);
+$get->fetch();
+$get->close();
 
-echo $q->affected_rows > 0 ? "deleted" : "not deleted";
+if ($thumb && file_exists(__DIR__ . "/" . $thumb)) {
+  unlink(__DIR__ . "/" . $thumb);
+}
 
-$q->close();
+$del = $conn->prepare("DELETE FROM posts WHERE id=?");
+$del->bind_param("i", $id);
+$del->execute();
+
+echo $del->affected_rows > 0 ? "deleted" : "not deleted";
+
+$del->close();
 $conn->close();
